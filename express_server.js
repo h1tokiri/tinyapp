@@ -18,7 +18,7 @@ app.get("/hello", (req, res) => {
   res.render("hello_world", templateVars);
 });
 
-app.listen(PORT,() => {
+app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
@@ -30,3 +30,8 @@ app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
+
+const urls = {
+  b2xVn2: "http://www.lighthouselabs.ca",
+  "9sm5xK": "http://www.google.com"
+};
