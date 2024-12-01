@@ -51,7 +51,8 @@ app.get("/urls/:id", (req, res) => {
   }
 
   const templateVars = { id, longURL }; //pass ID and longURL to the template
-  res.render("urls_show", templateVars); //render the template
+  // res.render("urls_show", templateVars); //render the template
+  res.redirect(longURL);
 });
 
 app.get("/hello", (req, res) => {
@@ -67,10 +68,10 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-const urls = {
-  b2xVn2: "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
-};
+// const urls = {
+//   b2xVn2: "http://www.lighthouselabs.ca",
+//   "9sm5xK": "http://www.google.com"
+// };
 
 // app.post("/urls", (req, res) => {
 //   console.log(req.body); // Log the POST request body to the console
