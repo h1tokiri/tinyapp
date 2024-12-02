@@ -37,8 +37,20 @@ app.post("/urls", (req, res) => {
   urlDatabase[shortURL] = longURL;
   
   console.log(`Short URL: ${shortURL}, Long URL: ${longURL}`); //log the mapping
-  res.redirect(`/urls/${shortURL}`); // redirect to the short URL's page
+  // res.redirect(`/urls/${shortURL}`); // redirect to the short URL's page
+  res.send("Ok");
 });
+
+app.post("/urls", (req, res) => {
+  const shortURL = generateRandomString();
+  const longURL = req.body.longURL;
+
+  urlDatabase[shortURL] = longURL;
+
+  console.log(`Short URL: ${shortURL}, Long URL: ${longURL}`);
+  res.redirect(`/urls/${shortURL}`);
+});
+
 
 app.get("/urls/:id", (req, res) => {
   const id = req.params.id; // get the ID from the route parameter
@@ -51,8 +63,20 @@ app.get("/urls/:id", (req, res) => {
   }
 
   const templateVars = { id, longURL }; //pass ID and longURL to the template
-  // res.render("urls_show", templateVars); //render the template
-  res.redirect(longURL);
+  res.render("urls_show", templateVars); //render the template
+  // res.redirect(longURL);
+});
+
+// optiona; ;route to handle redirection from short URL to long URL
+app.get("/u/:id", (req, res) => {
+  const longURL = urlDatabase[req.params.id]; // look up the long URL in the databse
+
+  // if the short url doesn't exist, return a 404 error
+  if (!longURL) {
+    res.status(404).send("Short URL not found!");
+    return;
+  }
+  res.redirect(longURL); // redirect to long url
 });
 
 app.get("/hello", (req, res) => {
@@ -60,12 +84,12 @@ app.get("/hello", (req, res) => {
   res.render("hello_world", templateVars);
 });
 
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
-});
-
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
+});
+
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}!`);
 });
 
 // const urls = {
