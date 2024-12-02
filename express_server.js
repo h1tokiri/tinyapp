@@ -12,10 +12,6 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com",
 };
 
-// app.get("/hello", (req, res) => {
-//   res.send("<html><body>Hello <b>World</b></body></html>\n");
-// });
-
 function generateRandomString() {
   return Math.random().toString(36).substring(2, 8);
 }
@@ -35,20 +31,10 @@ app.post("/urls", (req, res) => {
 
   // add the new short URL and its corresponding long URL to the database
   urlDatabase[shortURL] = longURL;
-  
+
   console.log(`Short URL: ${shortURL}, Long URL: ${longURL}`); //log the mapping
-  // res.redirect(`/urls/${shortURL}`); // redirect to the short URL's page
-  res.send("Ok");
-});
-
-app.post("/urls", (req, res) => {
-  const shortURL = generateRandomString();
-  const longURL = req.body.longURL;
-
-  urlDatabase[shortURL] = longURL;
-
-  console.log(`Short URL: ${shortURL}, Long URL: ${longURL}`);
-  res.redirect(`/urls/${shortURL}`);
+  res.redirect(`/urls/${shortURL}`); // redirect to the short URL's page
+  // res.send("Ok");
 });
 
 
@@ -91,13 +77,3 @@ app.get("/urls.json", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
-
-// const urls = {
-//   b2xVn2: "http://www.lighthouselabs.ca",
-//   "9sm5xK": "http://www.google.com"
-// };
-
-// app.post("/urls", (req, res) => {
-//   console.log(req.body); // Log the POST request body to the console
-//   res.send("Ok"); // Respond with 'Ok' (we will replace this)
-// });
