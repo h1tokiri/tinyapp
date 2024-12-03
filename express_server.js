@@ -65,6 +65,34 @@ app.get("/u/:id", (req, res) => {
   res.redirect(longURL); // redirect to long url
 });
 
+app.post("/urls/:id", (req, res) => {
+  const id = req.params.id; // get the short URL ID
+  const newLongURL = req.body.longURL; // get the updated long URL from the form
+  
+  //update the long URL in the database
+  if (urlDatabase[id]) {
+    urlDatabase[id] = newLongURL;
+  } else {
+    return res.status(404).send("Short URL not found!");
+  }
+
+  // redirect back to the URLs list
+  res.redirect("/urls");
+});
+
+app.get("/urls/:id/edit", (req, res) => {
+  const id = req.params.id; // extract the short URL ID from the route paramters
+  const longURL = urlDatabase[id]; // retrieve the corresponding long URL from the database
+
+  // if the short URL id does not exist in the databse, return a 404 error
+  if (!longURL) {
+    res.status(404).send("URL not found!");
+    return;
+  }
+  const templateVars = { id, longURL }; // prepare the variables to pass to the template
+  res.render("urls_show", templateVars); // render the 'urls_show' template
+});
+
 app.post("/urls/:id/delete", (req, res) => {
   const id = req.params.id;
   delete urlDatabase[id]; // remove the URL from the database
