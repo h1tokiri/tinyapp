@@ -65,6 +65,12 @@ app.get("/u/:id", (req, res) => {
   res.redirect(longURL); // redirect to long url
 });
 
+app.post("/urls/:id/delete", (req, res) => {
+  const id = req.params.id;
+  delete urlDatabase[id]; // remove the URL from the database
+  res.redirect("/urls"); // redirect back to the URLs list
+});
+
 app.get("/hello", (req, res) => {
   const templateVars = { greeting: "Hello World!" };
   res.render("hello_world", templateVars);
