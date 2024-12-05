@@ -7,6 +7,9 @@ app.set("view engine", "ejs");
 //add this middleware to parse URL-encoded payloads
 app.use(express.urlencoded({ extended: true }));
 
+const cookieParser = require("cookie-parser");
+app.use(cookieParser());
+
 const urlDatabase = {
   b2xVn2: "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
@@ -17,7 +20,7 @@ function generateRandomString() {
 }
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = { urls: urlDatabase, username: req.cookies.username };
   res.render("urls_index", templateVars);
 });
 
@@ -68,7 +71,7 @@ app.get("/u/:id", (req, res) => {
 app.post("/urls/:id", (req, res) => {
   const id = req.params.id; // get the short URL ID
   const newLongURL = req.body.longURL; // get the updated long URL from the form
-  
+
   //update the long URL in the database
   if (urlDatabase[id]) {
     urlDatabase[id] = newLongURL;
@@ -102,6 +105,12 @@ app.post("/urls/:id/delete", (req, res) => {
 app.get("/hello", (req, res) => {
   const templateVars = { greeting: "Hello World!" };
   res.render("hello_world", templateVars);
+});
+
+app.post("/login", (req, res) => {
+  const username = req.body.username; // get hte username from the form
+  res.cookie("username", username); //set a cookie with the username
+  res.redirect("/urls"); //redirect to the URLs page
 });
 
 app.get("/urls.json", (req, res) => {
