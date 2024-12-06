@@ -25,7 +25,9 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const templateVars = {
+    username: req.cookies.username};
+  res.render("urls_new", templateVars);
 });
 
 app.post("/urls", (req, res) => {
@@ -51,7 +53,7 @@ app.get("/urls/:id", (req, res) => {
     return;
   }
 
-  const templateVars = { id, longURL }; //pass ID and longURL to the template
+  const templateVars = { id, longURL, username: req.cookies.username }; //pass ID and longURL to the template
   res.render("urls_show", templateVars); //render the template
   // res.redirect(longURL);
 });
@@ -111,6 +113,11 @@ app.post("/login", (req, res) => {
   const username = req.body.username; // get hte username from the form
   res.cookie("username", username); //set a cookie with the username
   res.redirect("/urls"); //redirect to the URLs page
+});
+
+app.post("/logout", (req, res) => {
+  res.clearCookie("username"); // clear trhe username cookoie
+  res.redirect("urls"); //redirect to the URLs page
 });
 
 app.get("/urls.json", (req, res) => {
