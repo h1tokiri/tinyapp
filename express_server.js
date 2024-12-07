@@ -26,7 +26,8 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   const templateVars = {
-    username: req.cookies.username};
+    username: req.cookies.username
+  };
   res.render("urls_new", templateVars);
 });
 
@@ -111,13 +112,17 @@ app.get("/hello", (req, res) => {
 
 app.post("/login", (req, res) => {
   const username = req.body.username; // get hte username from the form
-  res.cookie("username", username); //set a cookie with the username
-  res.redirect("/urls"); //redirect to the URLs page
+  if (username) {
+    res.cookie("username", username); //set a cookie with the username
+    res.redirect("/urls"); //redirect to the URLs page
+  } else {
+    res.status(400).send("Username is Required!");
+  }
 });
 
 app.post("/logout", (req, res) => {
   res.clearCookie("username"); // clear trhe username cookoie
-  res.redirect("urls"); //redirect to the URLs page
+  res.redirect("/urls"); //redirect to the URLs page
 });
 
 app.get("/urls.json", (req, res) => {
