@@ -120,6 +120,10 @@ app.post("/login", (req, res) => {
   }
 });
 
+app.get("/register", (req, res) => {
+  res.render("register");
+});
+
 app.post("/logout", (req, res) => {
   res.clearCookie("username"); // clear trhe username cookoie
   res.redirect("/urls"); //redirect to the URLs page
