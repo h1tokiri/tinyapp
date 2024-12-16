@@ -31,6 +31,15 @@ function generateRandomString() {
   return Math.random().toString(36).substring(2, 8);
 }
 
+function getUserByEmail(email, users) {
+  for (const userId in users) {
+    if (users[userId].email === email) {
+      return users[userId]; // return the user object if email matches
+    }
+  }
+  return null; // return null if no match is found
+}
+
 // 3. Authentication Routes
 
 app.get("/register", (req, res) => {
@@ -41,19 +50,28 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   const { email, password } = req.body;
 
+  console.log("Received email:", email);
+  console.log("Received password:", password);
+
   //check if PW is missing
   if (!email || !password) {
     return res.status(400).send("Email and password are required!");
   }
 
-  // check if email already exists
-  for (const userId in users) {
-    if (users[userId].email === email) {
-      return res.status(400).send("Email already registered!");
-    }
+  // check if the email already exists using the helper function
+  const existingUser = getUserByEmail(email, users);
+  if (existingUser) {
+    return res.status(400).send("Email already registered!");
   }
 
-  // generate a new user IOD and save the user
+  // check if email already exists
+  // for (const userId in users) {
+  //   if (users[userId].email === email) {
+  //     return res.status(400).send("Email already registered!");
+  //   }
+  // }
+
+  // generate a new user ID and save the user
   const userId = generateRandomString();
   users[userId] = {
     id: userId,
@@ -80,14 +98,16 @@ app.post("/register", (req, res) => {
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
 
-  // find the user by email
+  // user the helper function find the user by email
+  const user = getUserByEmail(email, users);
 
-  let user = null;
-  for (const userId in users) {
-    if (users[userId].email === email) {
-      user = users[userId];
-    }
-  }
+  // // find the user by email
+  // let user = null;
+  // for (const userId in users) {
+  //   if (users[userId].email === email) {
+  //     user = users[userId];
+  //   }
+  // }
 
   // check if the user exists and the password matches
   if (!user || user.password !== password) {
@@ -99,6 +119,10 @@ app.post("/login", (req, res) => {
   res.cookie("user_id", user.id);
   res.redirect("/urls");
 });
+
+console.log(getUserByEmail("user@example.com", users)); // Should return the user object for "user@example.com"
+console.log(getUserByEmail("nonexistent@example.com", users)); // Should return null
+
 
 //   const username = req.body.username; // get hte username from the form
 //   if (username) {
