@@ -18,8 +18,8 @@
       </div>
       
       <div class="ml-auto">
-        <% if (username) { %>
-        <span class="navbar-text mr-3">Welcome, <%= username %>!</span>
+        <% if (user) { %>
+        <span class="navbar-text mr-3">Welcome, <%= user.email %>!</span>
       <form method="POST" action="/logout" class="form-inline">
         <button class="btn btn-outline-light my-2 my-sm-0" type="submit">Logout</button>
       </form>
@@ -27,13 +27,19 @@
     <!--Login form-->
       <form method="POST" action="/login" class="form-inline my-2 my-lg-0">
         <input 
-        class="form-control mr-sm-2" 
-        type="text" 
-        name="username" 
-        placeholder="Enter username"
-        aria-label="Username"/>
-          <button class="btn btn-outline-light my-2 my-sm-0" type="submit">Login</button>
-      </form>
+          class="form-control mr-sm-2" 
+          type="text" 
+          name="email" 
+          placeholder="Enter email"
+          aria-label="Email"/>
+        <input
+          class="form-control mr-sm-2"
+          type="password"
+          name="password"
+          placeholder="Enter password"
+          aria-label="Password" />
+        <button class="btn btn-outline-light my-2 my-sm-0" type="submit">Login</button>      
+        </form>
       <% } %>
     </div>
     </div>

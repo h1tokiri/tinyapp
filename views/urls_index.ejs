@@ -14,36 +14,47 @@
 <body>
   <%- include('partials/_header') %>
     <main style="margin: 1em;">
-      <h3>My URLs</h3>
-      <table class="table">
-        <thead>
-          <tr>
-            <th scope="col">Short URL ID</th>
-            <th scope="col">Long URL</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% for (let id in urls) { %>
-            <tr>
-              <td>
-                <%= id %>
-              </td> <!-- Short URL ID -->
-              <td>
-                <%= urls[id] %>
-              </td> <!-- Long URL -->
-              <td>
-                <form method="POST" action="/urls/<%= id %>/delete" style="display: inline;">
-                  <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                </form>
-                <!-- edit button-->
-                <a href="/urls/<%= id %>/edit" class="btn btn-secondary btn-sm">Edit</a>
-              </td>
-            </tr>
-            <% } %>
-        </tbody>
-      </table>
-      <!-- Link to shorten a new URL -->
-      <a href="/urls/new" class="btn btn-primary">Shorten a new URL</a>
+      <% if (user) { %>
+        <p>Logged in as: <%= user.email %>
+        </p>
+        <form method="POST" action="/logout">
+          <button type="submit" class="btn btn-outline-danger btn-sm">Logout</button>
+        </form>
+        <% } else { %>
+          <p>
+            <a href="/login">Login</a> | <a href="/register">Register</a>
+          </p>
+          <% } %>
+            <h3>My URLs</h3>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th scope="col">Short URL ID</th>
+                  <th scope="col">Long URL</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% for (let id in urls) { %>
+                  <tr>
+                    <td>
+                      <%= id %>
+                    </td> <!-- Short URL ID -->
+                    <td>
+                      <%= urls[id] %>
+                    </td> <!-- Long URL -->
+                    <td>
+                      <form method="POST" action="/urls/<%= id %>/delete" style="display: inline;">
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                      </form>
+                      <!-- edit button-->
+                      <a href="/urls/<%= id %>/edit" class="btn btn-secondary btn-sm">Edit</a>
+                    </td>
+                  </tr>
+                  <% } %>
+              </tbody>
+            </table>
+            <!-- Link to shorten a new URL -->
+            <a href="/urls/new" class="btn btn-primary">Shorten a new URL</a>
     </main>
     <!-- Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
