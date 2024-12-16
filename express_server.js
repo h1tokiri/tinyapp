@@ -45,7 +45,11 @@ function getUserByEmail(email, users) {
 // 3. Authentication Routes
 
 app.get("/register", (req, res) => {
-  res.render("register");
+  const userId = req.cookies.user_id;
+  const user = users[userId]; // look up the user based on the cookie
+
+  const templateVars = { user }; // pass the user variable to the template
+  res.render("register", templateVars);
 });
 
 app.get("/login", (req,res) => {
@@ -64,10 +68,6 @@ app.get("/login", (req,res) => {
 // POST route for handling user registration
 app.post("/register", (req, res) => {
   const { email, password } = req.body;
-
-  // debugging logs
-  console.log("Received email:", email);
-  console.log("Received password:", password);
 
   //check if PW is missing
   if (!email || !password) {
@@ -111,13 +111,17 @@ app.post("/login", (req, res) => {
   // user the helper function find the user by email
   const user = getUserByEmail(email, users);
 
-  // check if the user exists and the password matches
-  if (!user || user.password !== password) {
+  // if user is not found, send a 403 status code
+  if (!user) {
+    return res.status(403).send("Error: Invalid email or password");
+  }
+    
+  // if pw dont match, send a 403 status code
+  if (user.password !== password) {
     return res.status(403).send("Invalid email or password!");
   }
 
   // set a cookie with the user's ID and redirect to /urls
-
   res.cookie("user_id", user.id);
   res.redirect("/urls");
 });
@@ -127,7 +131,7 @@ console.log(getUserByEmail("nonexistent@example.com", users)); // Should return 
 
 app.post("/logout", (req, res) => {
   res.clearCookie("user_id"); // clear the username cookoie
-  res.redirect("/urls"); //redirect to the URLs page
+  res.redirect("/login"); //redirect to the login page
 });
 
 // 4. General Routes
