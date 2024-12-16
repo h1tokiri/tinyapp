@@ -48,6 +48,19 @@ app.get("/register", (req, res) => {
   res.render("register");
 });
 
+app.get("/login", (req,res) => {
+  const userId = req.cookies.user_id;
+  const user = users[userId]; // check if the user is already logged in
+
+  // if logged in, redirect to /urls
+  if (user) {
+    return res.redirect("/urls");
+  }
+
+  const templateVars = { user };
+  res.render("login", templateVars); // render the login form
+});
+
 // POST route for handling user registration
 app.post("/register", (req, res) => {
   const { email, password } = req.body;
@@ -92,27 +105,11 @@ app.post("/register", (req, res) => {
   res.redirect("/urls");
 });
 
-// app.get("/login", (req, res) => {
-//   const userId = req.cookies.user_id;
-//   const user = users[userId];
-
-//   const templateVars = {user}; // pass user data for consistency
-//   res.render("login", templateVars);
-// });
-
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
 
   // user the helper function find the user by email
   const user = getUserByEmail(email, users);
-
-  // // find the user by email
-  // let user = null;
-  // for (const userId in users) {
-  //   if (users[userId].email === email) {
-  //     user = users[userId];
-  //   }
-  // }
 
   // check if the user exists and the password matches
   if (!user || user.password !== password) {
@@ -127,16 +124,6 @@ app.post("/login", (req, res) => {
 
 console.log(getUserByEmail("user@example.com", users)); // Should return the user object for "user@example.com"
 console.log(getUserByEmail("nonexistent@example.com", users)); // Should return null
-
-
-//   const username = req.body.username; // get hte username from the form
-//   if (username) {
-//     res.cookie("username", username); //set a cookie with the username
-//     res.redirect("/urls"); //redirect to the URLs page
-//   } else {
-//     res.status(400).send("Username is Required!");
-//   }
-// });
 
 app.post("/logout", (req, res) => {
   res.clearCookie("user_id"); // clear the username cookoie
