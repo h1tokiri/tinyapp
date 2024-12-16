@@ -10,8 +10,8 @@ app.use(cookieParser());
 
 // 2. Global Variables and Helper Functions
 const urlDatabase = {
-  b2xVn2: "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com",
+  b2xVn2: { longURL: "http://www.lighthouselabs.ca", userId: "userRandomID" },
+  "9sm5xK": { longURL: "http://www.google.com", userId: "user2RandomID" },
 };
 
 const users = {
@@ -48,11 +48,16 @@ app.get("/register", (req, res) => {
   const userId = req.cookies.user_id;
   const user = users[userId]; // look up the user based on the cookie
 
+  if (user) {
+    // if logged in, redirect to /urls
+    return res.redirect("/urls");
+  }
+
   const templateVars = { user }; // pass the user variable to the template
   res.render("register", templateVars);
 });
 
-app.get("/login", (req,res) => {
+app.get("/login", (req, res) => {
   const userId = req.cookies.user_id;
   const user = users[userId]; // check if the user is already logged in
 
@@ -115,7 +120,7 @@ app.post("/login", (req, res) => {
   if (!user) {
     return res.status(403).send("Error: Invalid email or password");
   }
-    
+
   // if pw dont match, send a 403 status code
   if (user.password !== password) {
     return res.status(403).send("Invalid email or password!");
@@ -140,8 +145,17 @@ app.get("/urls", (req, res) => {
   const userId = req.cookies.user_id;
   const user = users[userId];
 
+  // transform urlDatabase into a format suitable for rendering
+  const urlsForTemplate = {};
+  for (const shortURL in urlDatabase) {
+    urlsForTemplate[shortURL] = {
+      longURL: urlDatabase[shortURL].longURL, // access longURL explicitly
+      userId: urlDatabase[shortURL].userId, // include userId for potential authorization checks
+    };
+  }
+
   const templateVars = {
-    urls: urlDatabase,
+    urls: urlsForTemplate,
     user,
   };
   // username: req.cookies.username }; commented out because no longer needed
@@ -163,15 +177,30 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
+  const userId = req.cookies.user_id; // added for redirecting people to register in order to create new url
+  const user = users[userId]; // added for redirecting people to register in order to create new url
+
+  if (!user) {
+    // if the user is not logged in, send an HTML error message
+    return res.status(401).send("Error: You must be logged in to create a new short URL.");
+  }
+
   const shortURL = generateRandomString(); // generate a new short URL
   const longURL = req.body.longURL; // extract the long URL from the form data
 
+  if (!longURL) {
+    // validate that the long URL is provided
+    return res.status(400).send("Error: A valid URL is required.");
+  }
+
   // add the new short URL and its corresponding long URL to the database
-  urlDatabase[shortURL] = longURL;
+  urlDatabase[shortURL] = {
+    longURL: longURL,
+    userId: userId, // associate the short URL with the user who created it
+  };
 
   console.log(`Short URL: ${shortURL}, Long URL: ${longURL}`); //log the mapping
   res.redirect(`/urls/${shortURL}`); // redirect to the short URL's page
-  // res.send("Ok");
 });
 
 // 5. URL-Specific Routes
@@ -179,12 +208,17 @@ app.post("/urls", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   const userId = req.cookies.user_id;
   const user = users[userId]; // get logged in user
-  const id = req.params.id; // get the ID from the route parameter
-  const longURL = urlDatabase[id]; // look up the long URL in the database
-
   if (!user) {
     return res.status(401).send("Please log in to view this URL!");
   }
+
+  const id = req.params.id; // get the ID from the route parameter
+  const urlEntry = urlDatabase[id]; // lookup the short url in the database
+  if (!urlEntry) {
+    //if the short URL ID does not exist in teh database, send an error message
+    return res.status(404).send("Short URL not found!");
+  }
+  const longURL = urlEntry.longURL; // access longURL explicitly
 
   // if the id does not exist, return a 404 error
   if (!longURL) {
@@ -203,7 +237,7 @@ app.post("/urls/:id", (req, res) => {
 
   //update the long URL in the database
   if (urlDatabase[id]) {
-    urlDatabase[id] = newLongURL;
+    urlDatabase[id].longURL = newLongURL;
   } else {
     return res.status(404).send("Short URL not found!");
   }
@@ -214,13 +248,20 @@ app.post("/urls/:id", (req, res) => {
 
 app.get("/urls/:id/edit", (req, res) => {
   const id = req.params.id; // extract the short URL ID from the route paramters
-  const longURL = urlDatabase[id]; // retrieve the corresponding long URL from the database
+  // const longURL = urlDatabase[id]; // retrieve the corresponding long URL from the database
+  const urlEntry = urlDatabase[id]; // retrieve the corresponding entry from the database
 
-  // if the short URL id does not exist in the databse, return a 404 error
-  if (!longURL) {
-    res.status(404).send("URL not found!");
-    return;
+  // // if the short URL id does not exist in the databse, return a 404 error
+  // if (!longURL) {
+  //   res.status(404).send("URL not found!");
+  //   return;
+  // }
+
+  if (!urlEntry) {
+    // if the short URL does not exist, return a 404 error
+    return res.status(404).send("Short URL not found!");
   }
+
   const templateVars = { id, longURL }; // prepare the variables to pass to the template
   res.render("urls_show", templateVars); // render the 'urls_show' template
 });
@@ -233,14 +274,26 @@ app.post("/urls/:id/delete", (req, res) => {
 
 // optiona; ;route to handle redirection from short URL to long URL
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id]; // look up the long URL in the databse
+  // const longURL = urlDatabase[req.params.id]; // look up the long URL in the databse
 
-  // if the short url doesn't exist, return a 404 error
-  if (!longURL) {
-    res.status(404).send("Short URL not found!");
-    return;
+  // // if the short url doesn't exist, return a 404 error
+  // if (!longURL) {
+  //   res.status(404).send("Short URL not found!");
+  //   return;
+  // }
+  // res.redirect(longURL); // redirect to long url
+
+  const urlEntry = urlDatabase[req.params.id];
+
+  if (!urlEntry) {
+    // if the short URL ID does not exist, send a 404 error
+    return res.status(404).send(`
+      <h1>Short URL not found!</h1>
+      <p>The short URL with ID <strong>${req.params.id}</strong> does not exist in our databse.</p>
+      <a href="/urls">Go back to your URLs</a>
+      `);
   }
-  res.redirect(longURL); // redirect to long url
+  return res.redirect(urlEntry.longURL);
 });
 
 // 6. Utility Routes
