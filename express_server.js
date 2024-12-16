@@ -34,9 +34,11 @@ function generateRandomString() {
 function getUserByEmail(email, users) {
   for (const userId in users) {
     if (users[userId].email === email) {
+      console.log(`User found for email: ${email}`);
       return users[userId]; // return the user object if email matches
     }
   }
+  console.log(`No user found for email: ${email}`);
   return null; // return null if no match is found
 }
 
@@ -50,17 +52,20 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   const { email, password } = req.body;
 
+  // debugging logs
   console.log("Received email:", email);
   console.log("Received password:", password);
 
   //check if PW is missing
   if (!email || !password) {
+    console.log("Error: Email of password is missing");
     return res.status(400).send("Email and password are required!");
   }
 
   // check if the email already exists using the helper function
   const existingUser = getUserByEmail(email, users);
   if (existingUser) {
+    console.log("Error: Email already registered");
     return res.status(400).send("Email already registered!");
   }
 
@@ -79,7 +84,7 @@ app.post("/register", (req, res) => {
     password,
   };
 
-  console.log("Updated users object:", users); // debugging step: log the users to verify new user is added
+  console.log("Updated users object:", users[userId]); // debugging step: log the users to verify new user is added
 
   // set a cookie with the user's ID and redirect to /urls
 
