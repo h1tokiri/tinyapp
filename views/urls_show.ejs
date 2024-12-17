@@ -26,8 +26,9 @@
           <div class="form-group">
             <label for="newLongURL">Update Long URL:</label>
             <input id="newLongURL" class="form-control" type="text" name="longURL" placeholder="Enter new URL"
-              value="<%= longURL %>" style="margin-bottom: 10px;" <button type="submit"
+              value="<%= longURL %>" style="margin-bottom: 10px;"> <button type="submit"
               class="btn btn-primary">Update</button>
+              <!--added a close bracket after 10px to make sure update button works properly-->
           </div>
         </form>
         <a href="/urls/new" class="btn btn-primary">Create a new URL</a>

@@ -174,11 +174,15 @@ app.get("/urls", (req, res) => {
   const user = users[userId];
 
   if (!user) {
+    const templateVars = {
+      message: "You must log in to view your URLs.",
+      user: null
+    };
     // return res.status(401).send(`
     //   <h2>You must log in to view URLs. </h2>
     //   <a href="/login">Login</a> or <a href="/register">Register</a>
     //   `);
-    return res.redirect("/login");
+    return res.render("error_view", templateVars); // render an error view
   }
 
   const userURLs = urlsForUser(userId);
@@ -198,14 +202,12 @@ app.get("/urls/new", (req, res) => {
   if (!user) {
     // render a view prompting the user to log in or register
     const templateVars = { user };
-    return res.render("login_or_register", templateVars); // redirect to login if not logged in
+    return res.redirect("/login"); // redirect to login if not logged in
   }
 
   // const userURLs = urlsForUser(userId);
 
-  const templateVars = {
-    user // username: req.cookies.username
-  };
+  const templateVars = { user };
   res.render("urls_new", templateVars);
 });
 
@@ -265,12 +267,8 @@ app.get("/urls/:id", (req, res) => {
 });
 
 app.post("/urls/:id", (req, res) => {
-  const userId = req.session.user_id; //req.cookies.user_id; // get the short URL ID
+  const userId = req.session.user_id; // get the short URL ID
   const urlEntry = urlDatabase[req.params.id];
-
-  // if (!urlEntry || urlEntry.userId !== userId) {
-  //   return res.status(403).send("You do not have permission to edit this URL.");
-  // }
 
   if (!userId) {
     const templateVars = { message: "You must log in to view this URL.", user: null };
@@ -287,9 +285,10 @@ app.post("/urls/:id", (req, res) => {
     return res.render("error_view", templateVars);
   }
 
+  //update the long URL
   urlDatabase[req.params.id].longURL = req.body.longURL;
-  // redirect back to the URLs list
-  res.redirect("/urls");
+
+  res.redirect("/urls"); // redirect back to the URLs list
 });
 
 app.get("/urls/:id/edit", (req, res) => {
