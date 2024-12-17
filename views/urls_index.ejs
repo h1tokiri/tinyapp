@@ -12,7 +12,7 @@
 </head>
 
 <body>
-  <%- include('partials/_header') %>
+  <%- include("partials/_header", { user: user}) %>
     <main style="margin: 1em;">
       <% if (user) { %>
         <p>Logged in as: <%= user.email %>

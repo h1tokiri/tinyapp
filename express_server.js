@@ -3,6 +3,7 @@ const express = require("express");
 const cookieParser = require("cookie-parser");
 const app = express();
 const PORT = 8080; //default port 8080
+const bcrypt = require("bcryptjs");
 
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true })); //add this middleware to parse URL-encoded payloads
@@ -113,10 +114,12 @@ app.post("/register", (req, res) => {
 
   // generate a new user ID and save the user
   const userId = generateRandomString();
+  const hashedPassword = bcrypt.hashSync(password,10); // 10 is the saltRounds value
+
   users[userId] = {
     id: userId,
     email,
-    password,
+    password: hashedPassword, // store the hashed password
   };
 
   console.log("Updated users object:", users[userId]); // debugging step: log the users to verify new user is added
@@ -139,7 +142,7 @@ app.post("/login", (req, res) => {
   }
 
   // if pw dont match, send a 403 status code
-  if (user.password !== password) {
+  if (!bcrypt.compareSync(password, user.password)) {
     return res.status(403).send("Invalid email or password!");
   }
 
@@ -163,10 +166,11 @@ app.get("/urls", (req, res) => {
   const user = users[userId];
 
   if (!user) {
-    return res.status(401).send(`
-      <h2>You must log in to view URLs. </h2>
-      <a href="/login">Login</a> or <a href="/register">Register</a>
-      `);
+    // return res.status(401).send(`
+    //   <h2>You must log in to view URLs. </h2>
+    //   <a href="/login">Login</a> or <a href="/register">Register</a>
+    //   `);
+    return res.redirect("/login");
   }
 
   const userURLs = urlsForUser(userId);
