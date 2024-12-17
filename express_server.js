@@ -50,7 +50,7 @@ function urlsForUser(userId) {
   const filteredURLs = {};
   for (const shortURL in urlDatabase) {
     if (urlDatabase[shortURL].userId === userId) {
-      filteredURLs[shortURL] = urlDatabase[shortURL];
+      filteredURLs[shortURL] = { longURL: urlDatabase[shortURL].longURL };
     }
   }
   return filteredURLs;
@@ -184,8 +184,12 @@ app.get("/urls/new", (req, res) => {
   const user = users[userId];
 
   if (!user) {
-    return res.redirect("/login"); // redirect to login if not logged in
+    // render a view prompting the user to log in or register
+    const templateVars = { user };
+    return res.render("login_or_register", templateVars); // redirect to login if not logged in
   }
+
+  // const userURLs = urlsForUser(userId);
 
   const templateVars = {
     user // username: req.cookies.username
@@ -228,12 +232,19 @@ app.get("/urls/:id", (req, res) => {
   const urlEntry = urlDatabase[req.params.id];
 
   if (!user) {
-    return res.status(401).send("Please log in to view this URL!");
+    const templateVars = { message: "You must log in to view this URL.", user };
+    return res.render("error_view", templateVars);
   }
 
-  if (!urlEntry || urlEntry.userId !== userId) {
+  if (!urlEntry) {
+    const templateVars = { message: "This URL does not exist.", user };
+    return res.render("error_view", templateVars);
+  }
+
+  if (urlEntry.userId !== userId) {
     //if the short URL ID does not exist in teh database, send an error message
-    return res.status(403).send("You do not have permission to view this URL!");
+    const templateVars = { message: "You do not have permission to view this URL." };
+    return res.render("error_view", templateVars);
   }
 
   const templateVars = { id: req.params.id, longURL: urlEntry.longURL, user }; //pass ID and longURL to the template
@@ -249,25 +260,19 @@ app.post("/urls/:id", (req, res) => {
   //   return res.status(403).send("You do not have permission to edit this URL.");
   // }
 
-  if (!urlEntry) {
-    return res.status(404).send(`
-      <h2>URL not found!</h2>
-      <a href="/urls">Go back to your URLs</a>
-      `);
+  if (!userId) {
+    const templateVars = { message: "You must log in to view this URL.", user: null };
+    return res.render("error_view", templateVars);
   }
 
-  if (!userId) {
-    return res.status(401).send(`
-      <h2>You must log in to edit URLs.</h2>
-      <a href="/login">Login</a> or <a href="/register">Register</a>
-      `);
+  if (!urlEntry) {
+    const templateVars = { message: "This URL does not exist.", user: users[userId] };
+    return res.render("error_view", templateVars);
   }
 
   if (urlEntry.userId !== userId) {
-    return res.status(403).send(`
-      <h2>You do not have permission to edit this URL.</h2>
-      a href="/urls"<Go back to your URLs</a>
-      `);
+    const templateVars = { message: "You do not have permission to edit this URL.", user: users[userId] };
+    return res.render("error_view", templateVars);
   }
 
   urlDatabase[req.params.id].longURL = req.body.longURL;
@@ -302,25 +307,18 @@ app.post("/urls/:id/delete", (req, res) => {
   //   return res.status(403).send("You do not have permission to delete this URL.");
   // }
 
-  if (!urlEntry) {
-    return res.status(404).send(`
-      <h2>URL not found!</h2>
-      <a href="/urls">Go back to your URLs</a>
-      `);
-  }
-
   if (!userId) {
-    return res.status(401).send(`
-      <h2> You must log in to delete URLs.</h2>
-      <a href="/login">Login</a> or <a href="/register">Register</a>
-      `);
+    const templateVars = { message: "You must log in to delete URLs.", user: null };
+    return res.render("error_view", templateVars);
+  }
+  if (!urlEntry) {
+    const templateVars = { message: "This URL does not exist.", user: users[userId] };
+    return res.render("error_view", templateVars);
   }
 
   if (urlEntry.userId !== userId) {
-    return res.status(403).send(`
-      <h2>You do not have permission to delete this URL.</h2>
-      <a href="/urls">Go back to your URLs</a>
-      `);
+    const templateVars = { message: "You do not have permission to delete this URL.", user: users[userId] };
+    return res.render("error_view", templateVars);
   }
 
   delete urlDatabase[req.params.id]; // remove the URL from the database
