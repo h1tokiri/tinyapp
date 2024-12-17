@@ -8,9 +8,9 @@ TinyApp is a full stack web application built with Node and Express that allows 
 !["screenshot Registration Page"](https://github.com/h1tokiri/tinyapp/blob/main/docs/02-register.png)
 !["screenshot My URLs with Encrypted Cookie"](https://github.com/h1tokiri/tinyapp/blob/main/docs/03-my_urls_encrypted_cookie.png)
 !["screenshot My URLs with Examples and Encrypted Cookie"](https://github.com/h1tokiri/tinyapp/blob/main/docs/04-my_urls_filled.png)
-!["screenshot My URLs on Edit Page"](https://github.com/h1tokiri/tinyapp/blob/main/docs/04-my_urls_filled.png)
-!["screenshot My URLs Following Edit-Update"](https://github.com/h1tokiri/tinyapp/blob/main/docs/04-my_urls_filled.png)
-!["screenshot if User Not Logged In, HTML Error Message"](https://github.com/h1tokiri/tinyapp/blob/main/docs/04-my_urls_filled.png)
+!["screenshot My URLs on Edit Page"](https://github.com/h1tokiri/tinyapp/blob/main/docs/05-my_urls_edit_update.png)
+!["screenshot My URLs Following Edit-Update"](https://github.com/h1tokiri/tinyapp/blob/main/docs/06-my_urls_updated.png)
+!["screenshot if User Not Logged In, HTML Error Message"](https://github.com/h1tokiri/tinyapp/blob/main/docs/07-if_not_logged_in_return_HTML_error_message.png)
 
 ## Dependencies
 
