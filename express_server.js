@@ -1,13 +1,19 @@
 // 1. Imports and App Setup
 const express = require("express");
-const cookieParser = require("cookie-parser");
+// const cookieParser = require("cookie-parser");
+const cookieSession = require("cookie-session");
 const app = express();
 const PORT = 8080; //default port 8080
 const bcrypt = require("bcryptjs");
 
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true })); //add this middleware to parse URL-encoded payloads
-app.use(cookieParser());
+// app.use(cookieParser());
+app.use(cookieSession({
+  name: "session", //name of the session cookie
+  keys: ["secretKey"], // secret key to sign the cookies
+  maxAge: 24 * 60 * 60 * 1000 // session expires after 24 hours
+}));
 
 // 2. Global Variables and Helper Functions
 const urlDatabase = {
@@ -60,7 +66,7 @@ function urlsForUser(userId) {
 // 3. Authentication Routes
 
 app.get("/", (req, res) => {
-  const userId = req.cookies.user_id;
+  const userId = req.session.user_id; // req.cookies.user_id;
   const user = users[userId];
 
   if (user) {
@@ -70,7 +76,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  const userId = req.cookies.user_id;
+  const userId = req.session.user_id; // req.cookies.user_id;
   const user = users[userId]; // look up the user based on the cookie
 
   if (user) {
@@ -83,7 +89,7 @@ app.get("/register", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-  const userId = req.cookies.user_id;
+  const userId = req.session.user_id; // req.cookies.user_id;
   const user = users[userId]; // check if the user is already logged in
 
   // if logged in, redirect to /urls
@@ -114,7 +120,7 @@ app.post("/register", (req, res) => {
 
   // generate a new user ID and save the user
   const userId = generateRandomString();
-  const hashedPassword = bcrypt.hashSync(password,10); // 10 is the saltRounds value
+  const hashedPassword = bcrypt.hashSync(password, 10); // 10 is the saltRounds value
 
   users[userId] = {
     id: userId,
@@ -126,7 +132,8 @@ app.post("/register", (req, res) => {
 
   // set a cookie with the user's ID and redirect to /urls
 
-  res.cookie("user_id", userId);
+  // res.cookie("user_id", userId);
+  req.session.user_id = userId;
   res.redirect("/urls");
 });
 
@@ -147,7 +154,8 @@ app.post("/login", (req, res) => {
   }
 
   // set a cookie with the user's ID and redirect to /urls
-  res.cookie("user_id", user.id);
+  // res.cookie("user_id", user.id);
+  req.session.user_id = user.id;
   res.redirect("/urls");
 });
 
@@ -155,14 +163,14 @@ console.log(getUserByEmail("user@example.com", users)); // Should return the use
 console.log(getUserByEmail("nonexistent@example.com", users)); // Should return null
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("user_id"); // clear the username cookoie
+  req.session = null; //res.clearCookie("user_id"); // clear the username cookoie
   res.redirect("/login"); //redirect to the login page
 });
 
 // 4. General Routes
 
 app.get("/urls", (req, res) => {
-  const userId = req.cookies.user_id;
+  const userId = req.session.user_id; // req.cookies.user_id;
   const user = users[userId];
 
   if (!user) {
@@ -202,7 +210,7 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  const userId = req.cookies.user_id; // added for redirecting people to register in order to create new url
+  const userId = req.session.user_id; // req.cookies.user_id; // added for redirecting people to register in order to create new url
   const user = users[userId]; // added for redirecting people to register in order to create new url
 
   if (!user) {
@@ -231,7 +239,7 @@ app.post("/urls", (req, res) => {
 // 5. URL-Specific Routes
 
 app.get("/urls/:id", (req, res) => {
-  const userId = req.cookies.user_id;
+  const userId = req.session.user_id; //req.cookies.user_id;
   const user = users[userId]; // get logged in user
   const urlEntry = urlDatabase[req.params.id];
 
@@ -257,7 +265,7 @@ app.get("/urls/:id", (req, res) => {
 });
 
 app.post("/urls/:id", (req, res) => {
-  const userId = req.cookies.user_id; // get the short URL ID
+  const userId = req.session.user_id; //req.cookies.user_id; // get the short URL ID
   const urlEntry = urlDatabase[req.params.id];
 
   // if (!urlEntry || urlEntry.userId !== userId) {
@@ -285,7 +293,7 @@ app.post("/urls/:id", (req, res) => {
 });
 
 app.get("/urls/:id/edit", (req, res) => {
-  const userId = req.cookies.user_id;
+  const userId = req.session.user_id; //req.cookies.user_id;
   const user = users[userId];
   const id = req.params.id; // extract the short URL ID from the route paramters, taking out for locking URLs for users
   const urlEntry = urlDatabase[id]; // retrieve the corresponding entry from the database
@@ -304,7 +312,7 @@ app.get("/urls/:id/edit", (req, res) => {
 });
 
 app.post("/urls/:id/delete", (req, res) => {
-  const userId = req.cookies.user_id;
+  const userId = req.session.user_id; //req.cookies.user_id;
   const urlEntry = urlDatabase[req.params.id];
 
   // if (!urlEntry || urlEntry.userId !== userId) {
