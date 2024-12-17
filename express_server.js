@@ -12,6 +12,10 @@ app.use(cookieParser());
 const urlDatabase = {
   b2xVn2: { longURL: "http://www.lighthouselabs.ca", userId: "userRandomID" },
   "9sm5xK": { longURL: "http://www.google.com", userId: "user2RandomID" },
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
+  i3BoGr: {
+    longURL: "https://www.google.ca", userID: "aJ48lW",
+  },
 };
 
 const users = {
@@ -42,7 +46,27 @@ function getUserByEmail(email, users) {
   return null; // return null if no match is found
 }
 
+function urlsForUser(userId) {
+  const filteredURLs = {};
+  for (const shortURL in urlDatabase) {
+    if (urlDatabase[shortURL].userId === userId) {
+      filteredURLs[shortURL] = urlDatabase[shortURL];
+    }
+  }
+  return filteredURLs;
+}
+
 // 3. Authentication Routes
+
+app.get("/", (req, res) => {
+  const userId = req.cookies.user_id;
+  const user = users[userId];
+
+  if (user) {
+    return res.redirect("/urls"); // redirect to /urls if logged in
+  }
+  return res.redirect("/login"); // redirect to /login if not logged in
+});
 
 app.get("/register", (req, res) => {
   const userId = req.cookies.user_id;
@@ -86,13 +110,6 @@ app.post("/register", (req, res) => {
     console.log("Error: Email already registered");
     return res.status(400).send("Email already registered!");
   }
-
-  // check if email already exists
-  // for (const userId in users) {
-  //   if (users[userId].email === email) {
-  //     return res.status(400).send("Email already registered!");
-  //   }
-  // }
 
   // generate a new user ID and save the user
   const userId = generateRandomString();
@@ -145,17 +162,17 @@ app.get("/urls", (req, res) => {
   const userId = req.cookies.user_id;
   const user = users[userId];
 
-  // transform urlDatabase into a format suitable for rendering
-  const urlsForTemplate = {};
-  for (const shortURL in urlDatabase) {
-    urlsForTemplate[shortURL] = {
-      longURL: urlDatabase[shortURL].longURL, // access longURL explicitly
-      userId: urlDatabase[shortURL].userId, // include userId for potential authorization checks
-    };
+  if (!user) {
+    return res.status(401).send(`
+      <h2>You must log in to view URLs. </h2>
+      <a href="/login">Login</a> or <a href="/register">Register</a>
+      `);
   }
 
+  const userURLs = urlsForUser(userId);
+
   const templateVars = {
-    urls: urlsForTemplate,
+    urls: userURLs,
     user,
   };
   // username: req.cookies.username }; commented out because no longer needed
@@ -208,80 +225,110 @@ app.post("/urls", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   const userId = req.cookies.user_id;
   const user = users[userId]; // get logged in user
+  const urlEntry = urlDatabase[req.params.id];
+
   if (!user) {
     return res.status(401).send("Please log in to view this URL!");
   }
 
-  const id = req.params.id; // get the ID from the route parameter
-  const urlEntry = urlDatabase[id]; // lookup the short url in the database
-  if (!urlEntry) {
+  if (!urlEntry || urlEntry.userId !== userId) {
     //if the short URL ID does not exist in teh database, send an error message
-    return res.status(404).send("Short URL not found!");
-  }
-  const longURL = urlEntry.longURL; // access longURL explicitly
-
-  // if the id does not exist, return a 404 error
-  if (!longURL) {
-    res.status(404).send("URL not found!");
-    return;
+    return res.status(403).send("You do not have permission to view this URL!");
   }
 
-  const templateVars = { id, longURL, user }; //pass ID and longURL to the template
+  const templateVars = { id: req.params.id, longURL: urlEntry.longURL, user }; //pass ID and longURL to the template
   res.render("urls_show", templateVars); //render the template
   // res.redirect(longURL);
 });
 
 app.post("/urls/:id", (req, res) => {
-  const id = req.params.id; // get the short URL ID
-  const newLongURL = req.body.longURL; // get the updated long URL from the form
+  const userId = req.cookies.user_id; // get the short URL ID
+  const urlEntry = urlDatabase[req.params.id];
 
-  //update the long URL in the database
-  if (urlDatabase[id]) {
-    urlDatabase[id].longURL = newLongURL;
-  } else {
-    return res.status(404).send("Short URL not found!");
+  // if (!urlEntry || urlEntry.userId !== userId) {
+  //   return res.status(403).send("You do not have permission to edit this URL.");
+  // }
+
+  if (!urlEntry) {
+    return res.status(404).send(`
+      <h2>URL not found!</h2>
+      <a href="/urls">Go back to your URLs</a>
+      `);
   }
 
+  if (!userId) {
+    return res.status(401).send(`
+      <h2>You must log in to edit URLs.</h2>
+      <a href="/login">Login</a> or <a href="/register">Register</a>
+      `);
+  }
+
+  if (urlEntry.userId !== userId) {
+    return res.status(403).send(`
+      <h2>You do not have permission to edit this URL.</h2>
+      a href="/urls"<Go back to your URLs</a>
+      `);
+  }
+
+  urlDatabase[req.params.id].longURL = req.body.longURL;
   // redirect back to the URLs list
   res.redirect("/urls");
 });
 
 app.get("/urls/:id/edit", (req, res) => {
-  const id = req.params.id; // extract the short URL ID from the route paramters
-  // const longURL = urlDatabase[id]; // retrieve the corresponding long URL from the database
+  const userId = req.cookies.user_id;
+  const user = users[userId];
+  const id = req.params.id; // extract the short URL ID from the route paramters, taking out for locking URLs for users
   const urlEntry = urlDatabase[id]; // retrieve the corresponding entry from the database
 
-  // // if the short URL id does not exist in the databse, return a 404 error
-  // if (!longURL) {
-  //   res.status(404).send("URL not found!");
-  //   return;
-  // }
-
-  if (!urlEntry) {
-    // if the short URL does not exist, return a 404 error
-    return res.status(404).send("Short URL not found!");
+  if (!user) {
+    return res.status(401).send("You must log in to edit this URL.");
   }
 
-  const templateVars = { id, longURL }; // prepare the variables to pass to the template
+  if (!urlEntry || urlEntry.userId !== userId) {
+    // if the userId doesnt match the userId that created the URL, they will not have permission to edit
+    return res.status(403).send("You do not have permission to edit this URL!");
+  }
+
+  const templateVars = { id: req.params.id, longURL: urlEntry.longURL, user }; // prepare the variables to pass to the template
   res.render("urls_show", templateVars); // render the 'urls_show' template
 });
 
 app.post("/urls/:id/delete", (req, res) => {
-  const id = req.params.id;
-  delete urlDatabase[id]; // remove the URL from the database
+  const userId = req.cookies.user_id;
+  const urlEntry = urlDatabase[req.params.id];
+
+  // if (!urlEntry || urlEntry.userId !== userId) {
+  //   return res.status(403).send("You do not have permission to delete this URL.");
+  // }
+
+  if (!urlEntry) {
+    return res.status(404).send(`
+      <h2>URL not found!</h2>
+      <a href="/urls">Go back to your URLs</a>
+      `);
+  }
+
+  if (!userId) {
+    return res.status(401).send(`
+      <h2> You must log in to delete URLs.</h2>
+      <a href="/login">Login</a> or <a href="/register">Register</a>
+      `);
+  }
+
+  if (urlEntry.userId !== userId) {
+    return res.status(403).send(`
+      <h2>You do not have permission to delete this URL.</h2>
+      <a href="/urls">Go back to your URLs</a>
+      `);
+  }
+
+  delete urlDatabase[req.params.id]; // remove the URL from the database
   res.redirect("/urls"); // redirect back to the URLs list
 });
 
 // optiona; ;route to handle redirection from short URL to long URL
 app.get("/u/:id", (req, res) => {
-  // const longURL = urlDatabase[req.params.id]; // look up the long URL in the databse
-
-  // // if the short url doesn't exist, return a 404 error
-  // if (!longURL) {
-  //   res.status(404).send("Short URL not found!");
-  //   return;
-  // }
-  // res.redirect(longURL); // redirect to long url
 
   const urlEntry = urlDatabase[req.params.id];
 
